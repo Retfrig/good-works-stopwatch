@@ -10,9 +10,14 @@ export function registerServiceWorker() {
         }
       });
       
-      // Register the service worker with a scope set to the root
-      navigator.serviceWorker.register('/service-worker.js', {
-        scope: '/',
+      // Get the base path - important for GitHub Pages
+      const basePath = window.location.pathname.includes('/good-works-stopwatch') 
+        ? '/good-works-stopwatch/' 
+        : '/';
+        
+      // Register the service worker with the correct path and scope
+      navigator.serviceWorker.register(`${basePath}service-worker.js`, {
+        scope: basePath,
         updateViaCache: 'none' // Don't use cache for service worker updates
       })
         .then(registration => {
