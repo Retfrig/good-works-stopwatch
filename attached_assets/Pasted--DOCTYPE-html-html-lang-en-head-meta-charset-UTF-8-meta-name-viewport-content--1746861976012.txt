@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Good Works Stopwatch</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 20px; background: #f2f2f2; }
+    h1 { text-align: center; }
+    .category { margin: 10px 0; display: flex; align-items: center; justify-content: space-between; }
+    .category span { padding: 5px 10px; border-radius: 5px; color: #fff; }
+    .controls { display: flex; gap: 10px; margin-top: 10px; }
+    .chart-container { max-width: 500px; margin: 20px auto; }
+    .add-category { margin-top: 20px; }
+    button { cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Good Works Stopwatch</h1>
+
+  <div id="categories"></div>
+
+  <div class="add-category">
+    <input type="text" id="newCategory" placeholder="Category name" />
+    <input type="color" id="newColor" value="#2196f3" />
+    <button onclick="addCategory()">Add Category</button>
+  </div>
+
+  <div class="chart-container">
+    <canvas id="dailyChart"></canvas>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "goodWorksData";
+    const WEEKLY_KEY = "weeklyOverview";
+    const DAY_MS = 86400000;
+    let categories = {};
+    let activeCategory = null;
+    let interval = null;
+    let mode = "stopwatch"; // or "timer"
+    let timerEnd = null;
+
+    function loadData() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const today = new Date().toDateString();
+        if (parsed.date !== today) {
+          archiveToday(parsed);
+          localStorage.removeItem(STORAGE_KEY);
+        } else {
+          categories = parsed.categories;
+        }
+      }
+    }
+
+    function archiveToday(data) {
+      const weekRaw = localStorage.getItem(WEEKLY_KEY);
+      let weekly = weekRaw ? JSON.parse(weekRaw) : [];
+      weekly.push(data);
+      if (weekly.length > 28) weekly.shift();
+      localStorage.setItem(WEEKLY_KEY, JSON.stringify(weekly));
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: new Date().toDateString(), categories }));
+    }
+
+    function addCategory() {
+      const name = document.getElementById("newCategory").value;
+      const color = document.getElementById("newColor").value;
+      if (name && !categories[name]) {
+        categories[name] = { time: 0, color };
+        render();
+        saveData();
+      }
+    }
+
+    function startCategory(name) {
+      stopActive();
+      activeCategory = name;
+      interval = setInterval(() => {
+        categories[name].time += 1;
+        render();
+        saveData();
+      }, 1000);
+    }
+
+    function startTimer(name, seconds) {
+      stopActive();
+      activeCategory = name;
+      timerEnd = Date.now() + seconds * 1000;
+      interval = setInterval(() => {
+        const remaining = Math.floor((timerEnd - Date.now()) / 1000);
+        if (remaining > 0) {
+          categories[name].time += 1;
+          render();
+          saveData();
+        } else {
+          stopActive();
+        }
+      }, 1000);
+    }
+
+    function stopActive() {
+      if (interval) clearInterval(interval);
+      interval = null;
+      activeCategory = null;
+    }
+
+    function render() {
+      const container = document.getElementById("categories");
+      container.innerHTML = "";
+      for (const name in categories) {
+        const data = categories[name];
+        const div = document.createElement("div");
+        div.className = "category";
+        div.innerHTML = `
+          <span style="background:${data.color}">${name} - ${formatTime(data.time)}</span>
+          <div class="controls">
+            <button onclick="startCategory('${name}')">Start</button>
+            <button onclick="startTimerPrompt('${name}')">Timer</button>
+            <button onclick="stopActive()">Stop</button>
+          </div>
+        `;
+        container.appendChild(div);
+      }
+      renderChart();
+    }
+
+    function startTimerPrompt(name) {
+      const input = prompt("Timer duration in seconds:");
+      const seconds = parseInt(input);
+      if (!isNaN(seconds) && seconds > 0) {
+        startTimer(name, seconds);
+      }
+    }
+
+    function formatTime(sec) {
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      return `${h}h ${m}m ${s}s`;
+    }
+
+    function renderChart() {
+      const ctx = document.getElementById("dailyChart").getContext("2d");
+      const labels = Object.keys(categories);
+      const data = labels.map(k => categories[k].time);
+      const colors = labels.map(k => categories[k].color);
+      if (window.myChart) window.myChart.destroy();
+      window.myChart = new Chart(ctx, {
+        type: "pie",
+        data: { labels, datasets: [{ data, backgroundColor: colors }] },
+        options: { responsive: true }
+      });
+    }
+
+    loadData();
+    render();
+  </script>
+</body>
+</html>

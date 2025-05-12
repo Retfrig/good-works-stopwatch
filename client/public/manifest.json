@@ -1,0 +1,55 @@
+{
+  "name": "Good Works Stopwatch",
+  "short_name": "Good Works",
+  "description": "Track and visualize your time spent on meaningful activities",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4C8BF5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/app-logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/app-logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start Timer",
+      "short_name": "Timer",
+      "description": "Start tracking your time",
+      "url": "/?action=timer",
+      "icons": [
+        {
+          "src": "/icons/timer-shortcut.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dashboard Overview"
+    },
+    {
+      "src": "/screenshots/mobile.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mobile Experience"
+    }
+  ],
+  "categories": ["productivity", "lifestyle", "utilities"]
+}
