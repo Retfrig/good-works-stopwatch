@@ -552,10 +552,19 @@ export default function TimeSummary() {
         )}
 
         <Tabs defaultValue="weekly" onValueChange={(value) => setActiveTab(value as "weekly" | "monthly" | "yearly")}>
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="weekly">Weekly Summary</TabsTrigger>
-            <TabsTrigger value="monthly">Monthly Summaries</TabsTrigger>
-            <TabsTrigger value="yearly">Yearly Summaries</TabsTrigger>
+          <TabsList className="flex flex-wrap w-full mb-6 gap-1">
+            <TabsTrigger className="flex-1 px-2 text-xs sm:text-sm" value="weekly">
+              <span className="hidden sm:inline">Weekly Summary</span>
+              <span className="sm:hidden">Weekly</span>
+            </TabsTrigger>
+            <TabsTrigger className="flex-1 px-2 text-xs sm:text-sm" value="monthly">
+              <span className="hidden sm:inline">Monthly Summaries</span>
+              <span className="sm:hidden">Monthly</span>
+            </TabsTrigger>
+            <TabsTrigger className="flex-1 px-2 text-xs sm:text-sm" value="yearly">
+              <span className="hidden sm:inline">Yearly Summaries</span>
+              <span className="sm:hidden">Yearly</span>
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="weekly" className="space-y-4">
