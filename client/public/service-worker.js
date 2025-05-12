@@ -1,22 +1,26 @@
 // Generate a unique cache name based on the current URL to handle changing dev domains
 const ORIGIN = self.location.origin;
 const CACHE_ID = ORIGIN.includes('replit.dev') ? ORIGIN.replace(/[^\w]/g, '-') : 'stable';
-const APP_CACHE = `goodworks-app-${CACHE_ID}-v1`;
-const DATA_CACHE = `goodworks-data-${CACHE_ID}-v1`;
+const APP_CACHE = `goodworks-app-${CACHE_ID}-v2`;
+const DATA_CACHE = `goodworks-data-${CACHE_ID}-v2`;
+
+// Get the base path from the current service worker URL
+// This handles GitHub Pages deployment which uses a repo subdirectory
+const BASE_PATH = new URL('./', self.location.href).pathname;
 
 // Core app files to cache for complete offline functionality
 const APP_SHELL_FILES = [
-  '/',
-  '/index.html',
-  '/offline.html',
-  '/manifest.json',
-  '/icons/app-logo.png',
-  '/service-worker.js',
-  '/assets/index.css',
-  '/assets/index.js',
-  '/sounds/bell.mp3',
-  '/sounds/chime.mp3',
-  '/sounds/alert.mp3'
+  BASE_PATH,
+  BASE_PATH + 'index.html',
+  BASE_PATH + 'offline.html',
+  BASE_PATH + 'manifest.json',
+  BASE_PATH + 'icons/app-logo.png',
+  BASE_PATH + 'service-worker.js',
+  BASE_PATH + 'assets/index.css',
+  BASE_PATH + 'assets/index.js',
+  BASE_PATH + 'sounds/bell.mp3',
+  BASE_PATH + 'sounds/chime.mp3',
+  BASE_PATH + 'sounds/alert.mp3'
 ];
 
 // Install: Cache app shell for completely offline operation
@@ -108,7 +112,7 @@ self.addEventListener('fetch', (event) => {
   if (isApiRequest(event.request)) {
     // Network first, fallback to cached API responses if network fails
     event.respondWith(handleApiRequest(event.request));
-  } else if (APP_SHELL_FILES.includes(requestUrl.pathname) || requestUrl.pathname === '/') {
+  } else if (APP_SHELL_FILES.includes(requestUrl.pathname) || requestUrl.pathname === BASE_PATH || requestUrl.pathname === '/') {
     // Cache first for app shell files (most important for offline)
     event.respondWith(handleAppShellRequest(event.request));
   } else if (isStaticAsset(event.request)) {
@@ -148,7 +152,7 @@ async function handleAppShellRequest(request) {
     
     // If both cache and network fail, return the offline fallback page
     if (request.mode === 'navigate') {
-      return caches.match('/offline.html')
+      return caches.match(BASE_PATH + 'offline.html')
         .then(response => {
           return response || new Response('App is offline and offline page is not cached.', {
             status: 503,
@@ -279,7 +283,7 @@ self.addEventListener('notificationclick', (event) => {
         return clientList[0].focus();
       }
       // Otherwise open a new window
-      return clients.openWindow('/');
+      return clients.openWindow(BASE_PATH);
     })
   );
 });
@@ -306,7 +310,7 @@ async function handleOtherRequest(request) {
     
     // If no cache, use the offline page for navigation requests
     if (request.mode === 'navigate') {
-      return caches.match('/offline.html')
+      return caches.match(BASE_PATH + 'offline.html')
         .then(response => {
           // If offline page is available, use it
           if (response) {
@@ -314,7 +318,7 @@ async function handleOtherRequest(request) {
           }
           
           // Otherwise try the home page
-          return caches.match('/');
+          return caches.match(BASE_PATH);
         })
         .catch(() => {
           // Last resort - basic message
